@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 export async function seedTasks() {
   try {
     for (const task of tasks) {
-      await setDoc(doc(db, "tasks", task.id), {
+      await setDoc(doc(db, "user", task.id), {
         title: task.title,
         description: task.description,
         assignedTo: task.assignedTo,
