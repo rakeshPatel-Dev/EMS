@@ -7,8 +7,9 @@ const Header = () => {
 
   const handleLogout = () => {
     // Clear auth info, redirect to login
-    localStorage.removeItem("user"); // example
-    navigate("/login");
+    localStorage.removeItem("ems-user"); // example
+    navigate("*");
+    window.location.reload();
   };
 
   return (
@@ -38,14 +39,6 @@ const Header = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
-        {/* Add Task Button */}
-        <button
-          onClick={() => navigate("/admin")}
-          className="flex items-center gap-2 bg-[#13ec6d] text-[#102218] px-4 py-2 rounded-lg font-bold hover:bg-[#13ec6d]/90 transition"
-        >
-          <Plus size={18} />
-          <span className="hidden md:inline">New Task</span>
-        </button>
 
         {/* Logout */}
         <button

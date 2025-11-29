@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { createTask, addUser, fetchUsers } from "../logic/adminLogic";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { createTask, addUser, fetchUsers, fetchLastTaskId } from "../Logic/adminLogic";
 
-const AdminPage = () => {
+const AdminPage = ({ handleLogout, currentUser }) => {
   const navigate = useNavigate();
-
   const [activeTab, setActiveTab] = useState("task");
 
-  // Users state for dropdown
+  // Users state
   const [users, setUsers] = useState([]);
 
   // Task form state
+  const [taskId, setTaskId] = useState(""); // manual ID input
+  const [lastTaskId, setLastTaskId] = useState(""); // show last ID
   const [taskName, setTaskName] = useState("");
   const [description, setDescription] = useState("");
   const [assignTo, setAssignTo] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("urgent");
+  const [status, setStatus] = useState("pending");
 
   // User form state
   const [userName, setUserName] = useState("");
@@ -25,14 +27,21 @@ const AdminPage = () => {
   const [userRole, setUserRole] = useState("employee");
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
-  // Fetch users for Assign To dropdown
+  // Load users for dropdown
   const loadUsers = async () => {
     const fetchedUsers = await fetchUsers();
     setUsers(fetchedUsers);
   };
 
+  // Load last task ID
+  const loadLastTaskId = async () => {
+    const lastId = await fetchLastTaskId(); // e.g., "T005"
+    setLastTaskId(lastId);
+  };
+
   useEffect(() => {
     loadUsers();
+    loadLastTaskId();
   }, []);
 
   const handleCreateTask = async () => {
@@ -40,12 +49,33 @@ const AdminPage = () => {
       alert("Task name and assignee are required");
       return;
     }
-    const task = { taskName, description, assignTo, dueDate, priority };
+
+    // Generate new task ID if not entered manually
+    let newTaskId;
+    if (taskId) {
+      newTaskId = taskId;
+    } else {
+      const lastNum = parseInt(lastTaskId.replace(/^T/, ""), 10);
+      const nextNum = lastNum + 1;
+      newTaskId = `T${String(nextNum).padStart(3, "0")}`;
+    }
+
+    const task = { taskId: newTaskId, taskName, description, assignTo, dueDate, priority, status };
+
     try {
       await createTask(task);
-      alert("Task created successfully!");
-      setTaskName(""); setDescription(""); setAssignTo(""); setDueDate(""); setPriority("urgent");
-    } catch (err) {
+      alert(`Task ${newTaskId} created successfully!`);
+
+      // Reset form
+      setTaskId("");
+      setTaskName("");
+      setDescription("");
+      setAssignTo("");
+      setDueDate("");
+      setPriority("urgent");
+      setStatus("pending");
+      setLastTaskId(newTaskId);
+    } catch {
       alert("Error creating task");
     }
   };
@@ -55,24 +85,28 @@ const AdminPage = () => {
       alert("Name, email and password are required");
       return;
     }
+
     const user = { name: userName, email: userEmail, password: userPassword, role: userRole, isAdmin: userIsAdmin };
+
     try {
       await addUser(user);
       alert("User added successfully!");
       setUserName(""); setUserEmail(""); setUserPassword(""); setUserRole("employee"); setUserIsAdmin(false);
-      loadUsers(); // Refresh assignTo list
-    } catch (err) {
+      loadUsers();
+    } catch {
       alert("Error adding user");
     }
   };
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#102218] p-6">
-      <Header />
+      <Header onLogout={handleLogout} />
+
+      {/* Welcome */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-[#102218] dark:text-white">
-            Welcome Admin 👋
+            Welcome {currentUser?.name} 👋
           </h1>
           <p className="text-neutral-text dark:text-[#13ec80]/80 mt-1">
             Manage tasks and users from your dashboard.
@@ -102,49 +136,67 @@ const AdminPage = () => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="space-y-6">
-        {activeTab === "task" && (
-          <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-4">Create Task</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input placeholder="Task Name" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="p-3 border rounded-lg md:col-span-2 dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
-                <option value="">Select User</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.name}>{u.name}</option>
-                ))}
-              </select>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <select value={priority} onChange={(e) => setPriority(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
-                {["Low", "Medium", "High", "Urgent"].map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
-              </select>
-              <button onClick={handleCreateTask} className="col-span-2 bg-[#13ec80] text-[#102218] py-2 rounded-lg font-semibold hover:bg-[#13ec80]/90 transition">Create Task</button>
-            </div>
-          </div>
-        )}
+      {/* Task Form */}
+      {activeTab === "task" && (
+        <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
+          <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-2">Create Task</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Last Task ID: {lastTaskId}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input placeholder="Task ID (optional)" value={taskId} onChange={(e) => setTaskId(e.target.value)} className="p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input placeholder="Task Name" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="p-3 border rounded-xl shadow-sm md:col-span-2 focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+              <option value="">Select User</option>
+              {users.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+            </select>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
 
-        {activeTab === "user" && (
-          <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-4">Add User</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input placeholder="Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <input placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <input placeholder="Password" type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-              <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="p-3 border rounded-lg dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
-                <option value="employee">Employee</option>
-                <option value="admin">Admin</option>
-              </select>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={userIsAdmin} onChange={() => setUserIsAdmin(!userIsAdmin)} />
-                <span className="text-neutral-text dark:text-white">Is Admin</span>
-              </label>
-              <button onClick={handleAddUser} className="col-span-2 bg-[#13ec80] text-[#102218] py-2 rounded-lg font-semibold hover:bg-[#13ec80]/90 transition">Add User</button>
+            {/* Priority Radio */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium dark:text-white">Priority:</span>
+              {["low", "medium", "high", "urgent"].map((p) => (
+                <label key={p} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="priority" value={p} checked={priority === p} onChange={() => setPriority(p)} className="hidden" />
+                  <span className={`px-3 py-1 rounded-full text-white font-semibold ${priority === p ? "bg-[#13ec80]" : "bg-gray-300 dark:bg-gray-700/40"}`}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </span>
+                </label>
+              ))}
             </div>
+
+            {/* Status dropdown */}
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+              <option value="">Select Status</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <button onClick={handleCreateTask} className="col-span-2 bg-[#13ec80] text-[#102218] py-2 rounded-lg font-semibold hover:bg-[#13ec80]/90 transition">Create Task</button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* User Form */}
+      {activeTab === "user" && (
+        <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
+          <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-4">Add User</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input placeholder="Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input placeholder="Password" type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+              <option value="employee">Employee</option>
+              <option value="admin">Admin</option>
+            </select>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={userIsAdmin} onChange={() => setUserIsAdmin(!userIsAdmin)} />
+              <span className="text-neutral-text dark:text-white">Is Admin</span>
+            </label>
+            <button onClick={handleAddUser} className="col-span-2 bg-[#13ec80] text-[#102218] py-2 rounded-lg font-semibold hover:bg-[#13ec80]/90 transition">Add User</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

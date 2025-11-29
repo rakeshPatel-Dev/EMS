@@ -5,12 +5,15 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../database/firebase";
 import { toast } from "react-toastify";
 
-const Login = ({ onLoginSuccess }) => {
+
+const Login = ({ onLoginSuccess = () => { } }) => {
+
   const { email, setEmail, password, setPassword } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
 
   const loginUser = async (email, password) => {
     setLoading(true);
+
     try {
       const snap = await getDocs(collection(db, "users"));
       const users = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -18,6 +21,7 @@ const Login = ({ onLoginSuccess }) => {
       const user = users.find(
         (u) => u.email === email && u.password === password
       );
+
       return user || null;
     } catch (err) {
       console.error(err);
@@ -35,13 +39,18 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     const user = await loginUser(email, password);
+
     if (!user) {
       toast.error("Invalid email or password");
       return;
     }
 
+    // ✅ Store user in localStorage so they stay logged in
+    localStorage.setItem("ems-user", JSON.stringify(user));
+
     toast.success(`Welcome ${user.name}!`);
-    onLoginSuccess(user); // pass user to App.jsx for routing
+
+    onLoginSuccess(user);
   };
 
   return <LoginCard handleLogin={handleLogin} loading={loading} />;
