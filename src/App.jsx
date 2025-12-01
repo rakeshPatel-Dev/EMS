@@ -44,6 +44,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </>
         )}
+        <Route path="/employee" element={<EmployeePage />} />
 
         {!currentUser?.isAdmin && currentUser && (
           <>

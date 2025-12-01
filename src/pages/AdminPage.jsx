@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { createTask, addUser, fetchUsers, fetchLastTaskId } from "../Logic/adminLogic";
+import { Eye, EyeOff } from "lucide-react";
 
 const AdminPage = ({ handleLogout, currentUser }) => {
   const navigate = useNavigate();
@@ -26,6 +27,9 @@ const AdminPage = ({ handleLogout, currentUser }) => {
   const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("employee");
   const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+  // For showing password
+  const [showPassword, setShowPassword] = useState(false)
 
   // Load users for dropdown
   const loadUsers = async () => {
@@ -99,11 +103,11 @@ const AdminPage = ({ handleLogout, currentUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#102218] p-6">
+    <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#102218] py-6 px-10">
       <Header onLogout={handleLogout} />
 
       {/* Welcome */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 mt-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-[#102218] dark:text-white">
             Welcome {currentUser?.name} 👋
@@ -121,7 +125,7 @@ const AdminPage = ({ handleLogout, currentUser }) => {
       </header>
 
       {/* Tabs */}
-      <div className="flex border-b border-neutral-border dark:border-neutral-border/20 mb-6">
+      <div className="flex items-center justify-center border-b border-neutral-border dark:border-neutral-border/20 mb-6">
         <button
           className={`px-4 py-2 font-semibold ${activeTab === "task" ? "border-b-2 border-[#13ec80] text-[#13ec80]" : "text-neutral-text dark:text-white/70"}`}
           onClick={() => setActiveTab("task")}
@@ -138,21 +142,21 @@ const AdminPage = ({ handleLogout, currentUser }) => {
 
       {/* Task Form */}
       {activeTab === "task" && (
-        <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
+        <div className="py-6 px-6 border md:px-20 lg:px-40 bg-white dark:bg-[#102219] rounded-xl shadow-md">
           <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-2">Create Task</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Last Task ID: {lastTaskId}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input placeholder="Task ID (optional)" value={taskId} onChange={(e) => setTaskId(e.target.value)} className="p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <input placeholder="Task Name" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="p-3 border rounded-xl shadow-sm md:col-span-2 focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+          <div className="flex flex-col gap-4">
+            <input placeholder="Task ID (optional)" value={taskId} onChange={(e) => setTaskId(e.target.value)} className="p-3 border rounded-md shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input placeholder="Task Name" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="p-3 border rounded-md shadow-sm focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="p-3 border rounded-md shadow-sm md:col-span-2 focus:ring-2 focus:ring-[#13ec80] dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
               <option value="">Select User</option>
               {users.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
             </select>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
 
             {/* Priority Radio */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <span className="font-medium dark:text-white">Priority:</span>
               {["low", "medium", "high", "urgent"].map((p) => (
                 <label key={p} className="flex items-center gap-2 cursor-pointer">
@@ -165,7 +169,7 @@ const AdminPage = ({ handleLogout, currentUser }) => {
             </div>
 
             {/* Status dropdown */}
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
               <option value="">Select Status</option>
               <option value="pending">Pending</option>
               <option value="in-progress">In Progress</option>
@@ -179,13 +183,28 @@ const AdminPage = ({ handleLogout, currentUser }) => {
 
       {/* User Form */}
       {activeTab === "user" && (
-        <div className="p-6 bg-white dark:bg-[#102219] rounded-xl shadow-md">
+        <div className="p-6 border sm:px-10 md:px-20 lg:px-40 bg-white dark:bg-[#102219] rounded-xl shadow-md">
           <h2 className="text-xl font-semibold text-[#102218] dark:text-white mb-4">Add User</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input placeholder="Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <input placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <input placeholder="Password" type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
-            <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="p-3 border rounded-xl shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
+          <div className="relative flex flex-col gap-4">
+            <input placeholder="Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <input placeholder="Email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white" />
+            <div className="relative">
+              <input
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                value={userPassword}
+                onChange={(e) => setUserPassword(e.target.value)}
+                className="w-full p-3 pr-12 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white"
+              />
+
+              <div
+                className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-[#4c9a73] dark:text-[#13ec80]/70"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
+              </div>
+            </div>
+            <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="p-3 border rounded-md shadow-sm dark:bg-[#102218]/50 dark:border-neutral-border/30 dark:text-white">
               <option value="employee">Employee</option>
               <option value="admin">Admin</option>
             </select>

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 
 const Login = ({ onLoginSuccess = () => { } }) => {
 
-  const { email, setEmail, password, setPassword } = useContext(UserContext);
+  const { email, password } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
 
   const loginUser = async (email, password) => {
@@ -53,7 +53,15 @@ const Login = ({ onLoginSuccess = () => { } }) => {
     onLoginSuccess(user);
   };
 
-  return <LoginCard handleLogin={handleLogin} loading={loading} />;
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
+  };
+
+
+  return <LoginCard handleKeyPress={handleKeyPress} handleLogin={handleLogin} loading={loading} />;
 };
 
 export default Login;

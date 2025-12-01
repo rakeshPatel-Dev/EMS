@@ -2,7 +2,7 @@ import { Eye, EyeOff, Sparkles } from "lucide-react";
 import React, { useContext, useState } from "react";
 import { UserContext } from "../context/Users";
 
-const LoginCard = ({ handleLogin, loading }) => {
+const LoginCard = ({ handleLogin, loading, handleKeyPress }) => {
   const { email, setEmail, password, setPassword } = useContext(UserContext);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -53,6 +53,7 @@ const LoginCard = ({ handleLogin, loading }) => {
                 </p>
                 <input
                   value={email}
+                  onKeyDown={handleKeyPress}
                   onChange={(e) => setEmail(e.target.value)}
                   className="form-input w-full rounded-lg border border-[#cfe7db] dark:border-[#13ec80]/20 bg-[#f6f6f8] dark:bg-[#102219] p-4 text-[#0d1b14] dark:text-white placeholder:text-[#4c9a73] dark:placeholder:text-[#13ec80]/50 focus:outline-none focus:border-[#13ec80] h-14"
                   placeholder="Enter your Email"
@@ -68,12 +69,13 @@ const LoginCard = ({ handleLogin, loading }) => {
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
+                    onKeyDown={handleKeyPress}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="form-input flex-1 rounded-l-lg border border-[#cfe7db] dark:border-[#13ec80]/20 bg-[#f6f6f8] dark:bg-[#102219] p-4 text-[#0d1b14] dark:text-white placeholder:text-[#4c9a73] dark:placeholder:text-[#13ec80]/50 focus:outline-none focus:border-[#13ec80] h-14"
+                    className="form-input flex-1 rounded-l-lg border border-[#cfe7db] dark:border-[#13ec80]/20 bg-[#f6f6f8] dark:bg-[#102219] py-4 px-3 text-[#0d1b14] dark:text-white placeholder:text-[#4c9a73] dark:placeholder:text-[#13ec80]/50 focus:outline-none focus:border-[#13ec80] h-14"
                     placeholder="Enter your password"
                   />
                   <div
-                    className="flex cursor-pointer items-center justify-center rounded-r-lg border border-l-0 border-[#cfe7db] dark:border-[#13ec80]/20 bg-[#f6f6f8] dark:bg-[#102219] px-4 text-[#4c9a73] dark:text-[#13ec80]/70"
+                    className="flex cursor-pointer items-center justify-center rounded-r-lg border border-l-0 border-[#cfe7db] dark:border-[#13ec80]/20 bg-[#f6f6f8] dark:bg-[#102219] px-3 text-[#4c9a73] dark:text-[#13ec80]/70"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
@@ -87,6 +89,7 @@ const LoginCard = ({ handleLogin, loading }) => {
               <button
                 onClick={handleLogin}
                 disabled={loading}
+                onKeyDown={handleKeyPress}
                 className="h-14 w-full rounded-lg bg-[#13ec80] text-[#102219] font-bold hover:bg-[#13ec80]/90 transition disabled:opacity-50"
               >
                 {loading ? "Logging in..." : "Login"}

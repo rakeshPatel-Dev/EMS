@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -30,10 +30,8 @@ const Header = () => {
         </div>
 
         <nav className="hidden md:flex gap-6 text-sm font-medium">
-          <a href="#" className="text-[#0d1b14] dark:text-white">Dashboard</a>
-          <a href="#" className="text-gray-500 dark:text-gray-400">Tasks</a>
-          <a href="#" className="text-gray-500 dark:text-gray-400">Reports</a>
-          <a href="#" className="text-gray-500 dark:text-gray-400">Admin</a>
+          <Link to="/employee" className="text-[#0d1b14] dark:text-white">Dashboard</Link>
+          <Link to="/admin" className="text-gray-500 dark:text-gray-400">Admin</Link>
         </nav>
       </div>
 
